@@ -421,20 +421,52 @@
 
           const data = await res.json();
 
-          if (data.code) {
-            pairingResult.innerHTML = `
-              <div class="pairing-code">${data.code}</div>
-              <div class="pair-info">Enter this code in your WhatsApp (Linked Devices → Link with phone number)</div>
-            `;
-          } else if (data.success) {
-            pairingResult.innerHTML = '<div style="color:#22c55e; margin-top:15px;">✅ Connected! No code needed.</div>';
-            updateUI('open');
-          } else {
+          if (!res.ok) {
             pairingResult.innerHTML = `<div style="color:#f87171; margin-top:15px;">❌ ${data.error || 'Failed. Try again.'}</div>`;
+            btn.disabled = false;
+            btnText.textContent = 'Get Pairing Code';
+            return;
           }
+
+          // Server accepted the request and is talking to WhatsApp in the
+          // background — poll /api/status until the code (or an error) shows up.
+          pairingResult.innerHTML = '<div style="margin-top:15px;">⏳ Waiting for WhatsApp to issue a code...</div>';
+          let attempts = 0;
+          const poll = setInterval(async () => {
+            attempts++;
+            try {
+              const s = await (await fetch('/api/status')).json();
+              if (s.pairingCode) {
+                clearInterval(poll);
+                pairingResult.innerHTML = `
+                  <div class="pairing-code">${s.pairingCode}</div>
+                  <div class="pair-info">Enter this code in your WhatsApp (Linked Devices → Link with phone number)</div>
+                `;
+                btn.disabled = false;
+                btnText.textContent = 'Get Pairing Code';
+              } else if (s.status === 'open') {
+                clearInterval(poll);
+                pairingResult.innerHTML = '<div style="color:#22c55e; margin-top:15px;">✅ Connected! No code needed.</div>';
+                updateUI('open');
+                btn.disabled = false;
+                btnText.textContent = 'Get Pairing Code';
+              } else if (s.status === 'error') {
+                clearInterval(poll);
+                pairingResult.innerHTML = `<div style="color:#f87171; margin-top:15px;">❌ ${s.error || 'Pairing failed. Try again.'}</div>`;
+                btn.disabled = false;
+                btnText.textContent = 'Get Pairing Code';
+              } else if (attempts > 30) {
+                clearInterval(poll);
+                pairingResult.innerHTML = '<div style="color:#f87171; margin-top:15px;">❌ Timed out waiting for WhatsApp. Try again.</div>';
+                btn.disabled = false;
+                btnText.textContent = 'Get Pairing Code';
+              }
+            } catch (e) {
+              // transient network hiccup while polling — keep trying until attempts run out
+            }
+          }, 1000);
         } catch (err) {
           pairingResult.innerHTML = '<div style="color:#f87171; margin-top:15px;">❌ Request failed. Is the server running?</div>';
-        } finally {
           btn.disabled = false;
           btnText.textContent = 'Get Pairing Code';
         }
