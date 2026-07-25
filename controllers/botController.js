@@ -2,7 +2,7 @@ const { startSocket, getConnectionStatus, reconnect, getSock } = require('../lib
 
 exports.getStatus = (req, res) => {
   const s = getConnectionStatus();
-  res.json({ status: s.status, qrAvailable: s.status === 'qr_ready', pairingCode: s.pairingCode || null });
+  res.json({ status: s.status, qrAvailable: s.status === 'qr_ready', pairingCode: s.pairingCode || null, error: s.error || null });
 };
 
 exports.getQR = (req, res) => {
@@ -21,24 +21,13 @@ exports.pairNumber = async (req, res) => {
   const sock = getSock();
   if (sock) sock.end();
   try {
+    // Kick off the connection but DON'T block the HTTP response on it —
+    // Heroku's router kills any request open longer than 30s (H12) and
+    // returns an HTML error page, which breaks the frontend's res.json().
+    // The frontend polls /api/status (which already exposes pairingCode)
+    // to pick up the code as soon as it's ready.
     await startSocket({ usePairingCode: true, phoneNumber: cleanPhone });
-    let attempts = 0;
-    const interval = setInterval(() => {
-      const s = getConnectionStatus();
-      if (s.status === 'pairing_code' && s.pairingCode) {
-        clearInterval(interval);
-        return res.json({ code: s.pairingCode });
-      }
-      if (s.status === 'open') {
-        clearInterval(interval);
-        return res.json({ success: true, message: 'Connected successfully' });
-      }
-      if (s.status === 'error') {
-        clearInterval(interval);
-        return res.status(500).json({ error: s.error || 'Pairing code request failed' });
-      }
-      if (attempts++ > 30) { clearInterval(interval); return res.status(500).json({ error: 'Timeout — server did not receive a code from WhatsApp' }); }
-    }, 1000);
+    res.json({ status: 'requesting', message: 'Requesting pairing code — polling status.' });
   } catch (err) { res.status(500).json({ error: err.message }); }
 };
 
