@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>V!PER MD OFC - Pair Bot</title>
+  <link rel="icon" href="https://i.ibb.co/G4z2SQ4M/160640.png">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body oncontextmenu="return false;">
+  <div class="container">
+    <div class="glass-card">
+      <img src="https://i.ibb.co/G4z2SQ4M/160640.png" alt="Logo" class="logo">
+      <h1>V!PER MD OFC</h1>
+      <p>Ultra‑fast WhatsApp Bot by Sasa Dev</p>
+      <div id="statusBadge" class="badge">Disconnected</div>
+      <div class="actions">
+        <button id="btnQR" class="btn">Connect with QR</button>
+        <button id="btnNumber" class="btn">Pair by Number</button>
+      </div>
+      <div id="qrSection" style="display:none;"><canvas id="qrCanvas"></canvas></div>
+      <div id="numberSection" style="display:none;">
+        <input type="tel" id="phoneInput" placeholder="Phone (e.g., 1234567890)">
+        <button id="btnGetCode" class="btn">Get Pairing Code</button>
+        <p id="pairingCode"></p>
+      </div>
+      <div id="success" style="display:none;" class="success-anim">
+        <div class="checkmark">✔</div>
+        <h2>Connected!</h2>
+      </div>
+      <footer>
+        <p>© 𝙿𝙾𝚆𝙴𝚁𝙳 𝙱𝚈 𝚂𝙰𝚂𝙰 𝙳𝙴𝚅</p>
+        <p>🙈 𝙲𝙾𝙽𝙽𝙴𝙲𝚃 𝚅!𝙿𝙴𝚁 𝙼𝙳 :- <a href="https://vipermd.sasatech.online">vipermd.sasatech.online</a></p>
+        <a href="https://whatsapp.com/channel/0029Vb86hKVJUM2SYD2qNw3K" target="_blank" class="support-btn">Support Channel</a>
+      </footer>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+  <script src="/script.js"></script>
+</body>
+</html>
